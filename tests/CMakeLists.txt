@@ -1,0 +1,4 @@
+
+add_test(NAME test01 COMMAND ${GMS_EXECUTABLE_NAME})
+
+add_test(NAME test02 COMMAND ${GMS_EXECUTABLE_NAME} abc)
