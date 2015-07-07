@@ -1,4 +1,5 @@
 
 add_test(NAME test01 COMMAND ${GMS_EXECUTABLE_NAME})
+set_tests_properties(test01 PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME test02 COMMAND ${GMS_EXECUTABLE_NAME} abc)
