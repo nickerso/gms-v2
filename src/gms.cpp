@@ -22,8 +22,8 @@ limitations under the License.Some license of other
 
 static void printInformation()
 {
-    std::cout << "GET Model Server version: " << gms::versionString() << std::endl;
-    std::cout << "Documentation: " << gms::GMS_DOCUMENTATION_URL << std::endl;
+    std::cout << "GET Model Server version: " << gms::versionString() << "\n"
+              << "Documentation: " << gms::GMS_DOCUMENTATION_URL << std::endl;
 }
 
 static void printUsage(const char* progName)
