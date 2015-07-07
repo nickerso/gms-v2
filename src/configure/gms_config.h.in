@@ -30,6 +30,8 @@ namespace gms {
 static unsigned int GMS_VERSION=@GMS_VERSION@;
 static const std::string GMS_VERSION_STRING="@GMS_VERSION_STRING@";
 
+static const std::string GMS_DOCUMENTATION_URL="@GMS_DOCUMENTATION_URL@";
+
 }
 
 #endif /* GMS_CONFIG_H */

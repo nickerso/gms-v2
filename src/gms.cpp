@@ -20,9 +20,26 @@ limitations under the License.Some license of other
 
 #include "gms_config.h"
 
+static void printInformation()
+{
+    std::cout << "GET Model Server version: " << gms::versionString() << std::endl;
+    std::cout << "Documentation: " << gms::GMS_DOCUMENTATION_URL << std::endl;
+}
+
+static void printUsage(const char* progName)
+{
+    std::cerr << "Usage: " << progName << " <PORT>\n"
+              << "  PORT - the port number GMS should listen on."
+              << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
-    std::cout << "binary name: " << argv[0] << std::endl;
-    if (argc > 1) std::cout << "GMS version: " << gms::versionString() << std::endl;
+    printInformation();
+    if (argc < 2)
+    {
+        printUsage(argv[0]);
+        return -1;
+    }
     return 0;
 }

@@ -26,6 +26,14 @@ include(common)
 # Use the following variables when configuring the build from the command line to
 # set the corresponding cache variables.
 
+# Documentation URL
+set(_PARAM_ANNOTATION "GMS documentation URL to include in the server.")
+set( GMS_DOCUMENTATION_URL "http://get.readthedocs.org/" CACHE STRING ${_PARAM_ANNOTATION} )
+if( DOC_URL )
+  set( GMS_DOCUMENTATION_URL "${DOC_URL}" CACHE STRING ${_PARAM_ANNOTATION} FORCE )
+endif()
+
+
 # COVERAGE ==> GMS_COVERAGE
 set(_PARAM_ANNOTATION "Enable coverage testing.")
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -74,9 +82,9 @@ endif()
 
 # INSTALL_PREFIX ==> GMS_INSTALL_PREFIX
 set(_PARAM_ANNOTATION "Install path prefix, prepended onto install directories.")
-set( GMS_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE STRING ${_PARAM_ANNOTATION} )
+set( GMS_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH ${_PARAM_ANNOTATION} )
 if( INSTALL_PREFIX )
-  set( GMS_INSTALL_PREFIX ${INSTALL_PREFIX} CACHE STRING ${_PARAM_ANNOTATION} FORCE )
+  set( GMS_INSTALL_PREFIX ${INSTALL_PREFIX} CACHE PATH ${_PARAM_ANNOTATION} FORCE )
 endif()
 
 # BUILD_SHARED ==> GMS_BUILD_SHARED
@@ -88,9 +96,9 @@ endif()
 
 # GMS_DEPENDENCY_DIR
 set(_PARAM_ANNOTATION "Dependency prefix (where to find non-system dependencies)")
-set( GMS_DEPENDENCY_DIR "/usr/local" CACHE STRING ${_PARAM_ANNOTATION} )
+set( GMS_DEPENDENCY_DIR "/usr/local" CACHE PATH ${_PARAM_ANNOTATION} )
 if( DEPENDENCY_DIR )
-  set( GMS_DEPENDENCY_DIR ${DEPENDENCY_DIR} CACHE STRING ${_PARAM_ANNOTATION} FORCE )
+  set( GMS_DEPENDENCY_DIR ${DEPENDENCY_DIR} CACHE PATH ${_PARAM_ANNOTATION} FORCE )
 endif()
 
 # Keep the GUI tidy.
