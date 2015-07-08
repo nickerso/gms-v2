@@ -47,6 +47,7 @@ configure_file(
 )
 
 find_package(csim CONFIG CONFIGS csim-targets.cmake)
+find_package(MHD REQUIRED)
 
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
   #SET(PLATFORM_LIBS ${PLATFORM_LIBS} "dl" "pthread" "tinfo" "z")
@@ -77,11 +78,13 @@ target_include_directories(${GMS_EXECUTABLE_NAME}
   $<INSTALL_INTERFACE:include/>
   PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
+  ${MHD_INCLUDE_DIRS}
 )
 
 target_link_libraries(${GMS_EXECUTABLE_NAME}
     PRIVATE
     csim
+    ${MHD_LIBRARIES}
 )
 
 set_target_properties(${GMS_EXECUTABLE_NAME} PROPERTIES
