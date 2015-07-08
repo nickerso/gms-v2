@@ -17,6 +17,7 @@ limitations under the License.Some license of other
 #include "version.h"
 
 #include <iostream>
+#include <curl/curl.h>
 
 #include "gms_config.h"
 
@@ -36,10 +37,12 @@ static void printUsage(const char* progName)
 int main(int argc, char *argv[])
 {
     printInformation();
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     if (argc < 2)
     {
         printUsage(argv[0]);
         return -1;
     }
+    curl_global_cleanup();
     return 0;
 }
