@@ -60,6 +60,9 @@ endif()
 set(SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/version.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/gms.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/serverdata.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/serverapi.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/libhttpd-utils.cpp
 )
 
 set(HEADER_FILES

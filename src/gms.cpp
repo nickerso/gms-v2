@@ -20,6 +20,8 @@ limitations under the License.Some license of other
 #include <curl/curl.h>
 
 #include "gms_config.h"
+#include "serverdata.h"
+#include "libhttpd-utils.h"
 
 static void printInformation()
 {
@@ -29,8 +31,15 @@ static void printInformation()
 
 static void printUsage(const char* progName)
 {
-    std::cerr << "Usage: " << progName << " <PORT>\n"
-              << "  PORT - the port number GMS should listen on."
+    std::cerr << "\nUsage: " << progName << " <port> <working folder> [PMR2 instance]\n"
+              << "\n  port - (required) the port number GMS should listen on, e.g., 1234.\n"
+              << "\n  working folder - (required) the full path to the local folder in which\n"
+              << "    to store working copies of repository workspaces.\n"
+              << "\n  PMR2 instance - (optional) the instance of PMR2 to use as the repository.\n"
+              << "    Will not override the existing origin in any working copies already\n"
+              << "    in the <working folder>. Available options are:\n"
+              << "    * staging - (default) http://staging.physiomeproject.org\n"
+              << "    * models - https://models.physiomeproject.org\n"
               << std::endl;
 }
 
@@ -38,11 +47,28 @@ int main(int argc, char *argv[])
 {
     printInformation();
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    if (argc < 2)
+    if (argc < 3)
     {
         printUsage(argv[0]);
         return -1;
     }
+    std::string workingFolder(argv[2]);
+    std::string repositoryUrl = "http://staging.physiomeproject.org/";
+    if (argc > 3)
+    {
+        std::string tmp(argv[3]);
+        if (tmp == "staging");// default, do nothing
+        else if (tmp == "models") repositoryUrl = "https://models.physiomeproject.org/";
+        else
+        {
+            std::cerr << "Invalid/unknown PMR2 instance: " << tmp << std::endl;
+            printUsage(argv[0]);
+            return -2;
+        }
+    }
+    gms::ServerData* data = new gms::ServerData(repositoryUrl, workingFolder);
+    startServer(atoi(argv[1]), data);
+    delete data;
     curl_global_cleanup();
     return 0;
 }
