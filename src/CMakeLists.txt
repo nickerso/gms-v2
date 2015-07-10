@@ -63,6 +63,7 @@ set(SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/serverdata.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/serverapi.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/libhttpd-utils.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/api/echo.cpp
 )
 
 set(HEADER_FILES
