@@ -28,7 +28,7 @@ std::string Echo::execute(const std::string& path, const std::map<std::string, s
                           ServerData* data)
 {
     Json::Value root;
-    root["path"] = path.substr(EchoRootPath.length()+1);
+    root["path"] = (path.length() > EchoRootPath.length()+1) ? path.substr(EchoRootPath.length()+1) : "";
     for (const auto& a: argvals)
     {
         root["arguments"][a.first] = a.second;
