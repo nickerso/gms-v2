@@ -64,6 +64,7 @@ set(SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/serverapi.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/libhttpd-utils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/api/echo.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../jsoncpp/jsoncpp.cpp
 )
 
 set(HEADER_FILES
@@ -84,6 +85,7 @@ target_include_directories(${GMS_EXECUTABLE_NAME}
   $<INSTALL_INTERFACE:include/>
   PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/../jsoncpp
   ${MHD_INCLUDE_DIRS}
   ${CURL_INCLUDE_DIRS}
 )

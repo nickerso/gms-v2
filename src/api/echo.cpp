@@ -1,5 +1,9 @@
 #include "echo.h"
 
+
+#include <json/json.h>
+#include <json/json-forwards.h>
+
 namespace gms {
 
 static const std::string EchoRootPath = "/echo";
@@ -23,12 +27,13 @@ Echo::~Echo()
 std::string Echo::execute(const std::string& path, const std::map<std::string, std::string> &argvals,
                           ServerData* data)
 {
-    std::string response = path.substr(EchoRootPath.length()+1);
+    Json::Value root;
+    root["path"] = path.substr(EchoRootPath.length()+1);
     for (const auto& a: argvals)
     {
-        response += "; argument with key *" + a.first + "* and value *" + a.second + "*";
+        root["arguments"][a.first] = a.second;
     }
-    response += "\n";
+    std::string response = Json::FastWriter().write(root);
     return response;
 }
 
