@@ -59,10 +59,21 @@ std::string Register::execute(const std::string& path, const std::map<std::strin
     std::string base_request_token_url = requestTokenUrl + (request_token_query_args.empty() ? std::string("") : (std::string("?")+request_token_query_args) );
     std::string oAuthQueryString =
         oauth.getURLQueryString( OAuth::Http::Get, base_request_token_url);
+    std::string oAuthHttpHeader =
+        oauth.getFormattedHttpHeader(OAuth::Http::Get, base_request_token_url);
 
-    requestTokenUrl += "?" + oAuthQueryString;
-    std::string requestToken = getUrlContent(requestTokenUrl);
+    //requestTokenUrl += "?" + oAuthQueryString;
+    std::string requestToken = getUrlContent(requestTokenUrl + "?" + oAuthQueryString);
     std::cout << "Request token returned: " << requestToken << std::endl;
+    requestToken = getUrlWithHeaders(requestTokenUrl, oAuthHttpHeader);
+    std::cout << "Request token returned: " << requestToken << std::endl;
+
+    // seems liboauth doesn't always check things, so we need to check the result ourselves
+    if (requestToken.length() == 0)
+    {
+        std::cerr << "Unable to get get request token, so quitting." << std::endl;
+        return "MISSING REQUEST TOKEN";
+    }
 
     // Extract the token and token_secret from the response
     // This time we pass the response directly and have the library do the
