@@ -53,12 +53,12 @@ int main(int argc, char *argv[])
         return -1;
     }
     std::string workingFolder(argv[2]);
-    std::string repositoryUrl = "http://staging.physiomeproject.org/";
+    std::string repositoryUrl = "http://staging.physiomeproject.org";
     if (argc > 3)
     {
         std::string tmp(argv[3]);
         if (tmp == "staging");// default, do nothing
-        else if (tmp == "models") repositoryUrl = "https://models.physiomeproject.org/";
+        else if (tmp == "models") repositoryUrl = "https://models.physiomeproject.org";
         else
         {
             std::cerr << "Invalid/unknown PMR2 instance: " << tmp << std::endl;

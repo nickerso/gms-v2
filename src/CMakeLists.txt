@@ -63,7 +63,9 @@ set(SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/serverdata.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/serverapi.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/libhttpd-utils.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/curlutils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/api/echo.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/api/register.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../jsoncpp/jsoncpp.cpp
 )
 
@@ -87,6 +89,7 @@ target_include_directories(${GMS_EXECUTABLE_NAME}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/../jsoncpp
   ${MHD_INCLUDE_DIRS}
+  ${OAUTH_INCLUDE_DIRS}
   ${CURL_INCLUDE_DIRS}
 )
 
@@ -94,6 +97,7 @@ target_link_libraries(${GMS_EXECUTABLE_NAME}
     PRIVATE
     csim
     ${MHD_LIBRARIES}
+    ${OAUTH_LIBRARIES}
     ${CURL_LIBRARIES}
 )
 
