@@ -7,6 +7,7 @@
 namespace gms {
 
 class ServerData;
+class OauthCurl;
 
 /**
  * @brief The GMS Register service handles registering users with a PMR2 instance.
@@ -42,7 +43,6 @@ public:
      */
     std::string execute(const std::string& path, const std::map<std::string, std::string> &argvals,
                         ServerData *data);
-
 };
 
 } // namespace gms

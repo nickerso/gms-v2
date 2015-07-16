@@ -6,6 +6,8 @@
 //! Everything in GMS is in this namespace.
 namespace gms {
 
+class OauthCurl;
+
 /**
  * @brief This class manages the data for this server instance.
  */
@@ -36,6 +38,19 @@ public:
      */
     const std::string& getWorkingFolder() const;
 
+    /**
+     * @brief Check if this instance of the server has been successfully authenticated
+     * against an instance of PMR2. i.e., a user has granted us access to their data.
+     * @return true if this instance of the server has been successfully authenticated, false otherwise.
+     */
+    bool isAuthenticated() const;
+
+    /**
+     * Authenticate this server instance with a PMR2 instance.
+     * @return true if successfully authenticated, false otherwise.
+     */
+    bool authenticate();
+
 private:
     /**
      * The URL of the repository used in this server instance - set on construction
@@ -45,6 +60,11 @@ private:
      */
     std::string mRepositoryUrl;
     std::string mWorkingFolder;
+
+    /**
+     * This is used to manage oauth authenticated communication with a PMR2 instance.
+     */
+    class OauthCurl* mOauthCurl;
 };
 
 } // namespace gms
