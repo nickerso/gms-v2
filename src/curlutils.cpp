@@ -48,7 +48,7 @@ static size_t retrieveContent(char* buffer, size_t size, size_t nmemb, void* str
 std::string getUrlContent(const std::string &url)
 {
     std::cout << "CurlUtils getting URL: *" << url << "*" << std::endl;
-    CurlData curlHandle;
+    static CurlData curlHandle;
     std::string data, headerData;
     CURL* curl = curlHandle.mCurl;
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -124,5 +124,7 @@ std::string getUrlWithHeaders(const std::string &url,
     }
     return data;
 }
+
+
 
 } // namespace gms
