@@ -6,7 +6,6 @@
 #include <liboauthcpp/liboauthcpp.h>
 
 #include "../serverdata.h"
-#include "../curlutils.h"
 
 namespace gms {
 
