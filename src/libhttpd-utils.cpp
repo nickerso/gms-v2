@@ -99,6 +99,24 @@ static int send_bad_response(struct MHD_Connection *connection)
     return ret;
 }
 
+static int send_authenticated_response(struct MHD_Connection *connection)
+{
+    static char *authResponse = (char *)("Successfully authenticated");
+    int response_len = strlen(authResponse);
+    int ret;
+    struct MHD_Response *response;
+
+    response = MHD_create_response_from_buffer(response_len, authResponse,
+            MHD_RESPMEM_PERSISTENT);
+    if (response == 0)
+    {
+        return MHD_NO;
+    }
+    ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+    MHD_destroy_response(response);
+    return ret;
+}
+
 /*
  *The Cross-Origin Resource Sharing standard works by adding new HTTP headers
  *that allow servers to describe the set of origins that are permitted to read
@@ -196,54 +214,45 @@ static int handleRegistration(struct MHD_Connection *connection, const char *url
 
     std::cout << "Handling registration URL: " << url << std::endl;
 
-    response = MHD_create_response_from_buffer(0, NULL, MHD_RESPMEM_PERSISTENT);
-    if (response == 0)
-    {
-        return MHD_NO;
-    }
-
     if (data->isAuthenticated())
     {
         // already authenticated, so do nothing?
-        ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-        MHD_destroy_response(response);
-        return ret;
+        return send_authenticated_response(connection);
     }
 
     // first we need to redirect the user to the PMR authorisation page, if we haven't already done so
     if (!data->isAuthenticationUrlSet())
     {
         std::string authorisationUrl = data->getAuthenticationUrl();
+        response = MHD_create_response_from_buffer(0, NULL, MHD_RESPMEM_PERSISTENT);
+        if (response == 0)
+        {
+            return MHD_NO;
+        }
         MHD_add_response_header(response, "Location", authorisationUrl.c_str());
         ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, response);
         MHD_destroy_response(response);
         return ret;
     }
 
-    // now we assume that we have the verifier and token set in the URL
+    // now if we have the verifier and token set in the URL we can continue the authentication process
     if (url_args.count("oauth_verifier"))
     {
         if (data->authenticate(url_args["oauth_verifier"]))
         {
             std::cout << "whoo hoo?!" << std::endl;
-            response = MHD_create_response_from_buffer(25, (char*)"Whoo Hoo!", MHD_RESPMEM_PERSISTENT);
-            ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-            MHD_destroy_response(response);
-            return ret;
+            return send_authenticated_response(connection);
         }
         else
         {
             std::cerr << "Error authenticating?" << std::endl;
-            ret = MHD_NO;
         }
     }
     else
     {
         std::cerr << "Missing verifier arg?" << std::endl;
-        ret = MHD_NO;
     }
-    MHD_destroy_response(response);
-    return ret;
+    return MHD_NO;
 }
 
 static void
