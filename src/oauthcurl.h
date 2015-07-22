@@ -38,12 +38,19 @@ public:
         return mAuthenticated;
     }
 
+    inline bool isAuthenticationUrlSet() const
+    {
+        return mAuthenticationUrlSet;
+    }
+
     /**
      * Request the URL to which the user can be redirected in order to authenticate this instance to
      * a PMR2 instance.
      * @return The URL on success; an empty string on failure.
      */
     std::string getAuthenticationUrl();
+
+    bool authenticate(const std::string& oauthVerifier);
 
 private:
     /**
@@ -55,6 +62,7 @@ private:
     std::string mConsumerKey;
     std::string mConsumerSecret;
     bool mAuthenticated;
+    bool mAuthenticationUrlSet;
     OauthData* mOauth;
 };
 

@@ -202,11 +202,46 @@ static int handleRegistration(struct MHD_Connection *connection, const char *url
         return MHD_NO;
     }
 
-    // first we need to redirect the user to the PMR authorisation page
-    std::string authorisationUrl = data->getAuthenticationUrl();
-    MHD_add_response_header(response, "Location", authorisationUrl.c_str());
+    if (data->isAuthenticated())
+    {
+        // already authenticated, so do nothing?
+        ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+        MHD_destroy_response(response);
+        return ret;
+    }
 
-    ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, response);
+    // first we need to redirect the user to the PMR authorisation page, if we haven't already done so
+    if (!data->isAuthenticationUrlSet())
+    {
+        std::string authorisationUrl = data->getAuthenticationUrl();
+        MHD_add_response_header(response, "Location", authorisationUrl.c_str());
+        ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, response);
+        MHD_destroy_response(response);
+        return ret;
+    }
+
+    // now we assume that we have the verifier and token set in the URL
+    if (url_args.count("oauth_verifier"))
+    {
+        if (data->authenticate(url_args["oauth_verifier"]))
+        {
+            std::cout << "whoo hoo?!" << std::endl;
+            response = MHD_create_response_from_buffer(25, (char*)"Whoo Hoo!", MHD_RESPMEM_PERSISTENT);
+            ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+            MHD_destroy_response(response);
+            return ret;
+        }
+        else
+        {
+            std::cerr << "Error authenticating?" << std::endl;
+            ret = MHD_NO;
+        }
+    }
+    else
+    {
+        std::cerr << "Missing verifier arg?" << std::endl;
+        ret = MHD_NO;
+    }
     MHD_destroy_response(response);
     return ret;
 }
@@ -305,6 +340,11 @@ static int url_handler(void *cls, struct MHD_Connection *connection,
     // need to handle registration/authorisation separately
     else if (Register::CompatiblePath(url))
     {
+        if (MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND,
+                get_url_args, &url_args) < 0)
+        {
+            return MHD_NO;
+        }
         return handleRegistration(connection, url, url_args, data);
     }
 

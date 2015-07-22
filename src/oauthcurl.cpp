@@ -12,7 +12,7 @@ static int curlCallback(char* data, size_t size, size_t nmemb, std::string* data
 
 class OauthData {
 public:
-    OauthData()
+    OauthData() : consumer(NULL), client(NULL), requestToken(NULL), accessToken(NULL)
     {
         std::cout << "Creating a persistent curl handle for an OauthData" << std::endl;
         mCurl = curl_easy_init();
@@ -22,10 +22,16 @@ public:
     {
         std::cout << "Destroying a persistent curl handle for an OauthData" << std::endl;
         if (mCurl) curl_easy_cleanup(mCurl);
+        if (consumer) delete consumer;
+        if (accessToken) delete accessToken;
+        if (requestToken) delete requestToken;
+        if (client) delete client;
     }
 
     OAuth::Consumer* consumer;
     OAuth::Client* client;
+    OAuth::Token* requestToken;
+    OAuth::Token* accessToken;
     std::string performPost(const std::string& url, const std::string& header = "", const std::string& dataStr = "")
     {
         resetCurl();
@@ -93,15 +99,6 @@ private:
 
     bool checkOKresponse()
     {
-#if 0
-        std::string firstLine = mResponseHeaders.substr(0, mResponseHeaders.find_first_of('\n'));
-        if (firstLine.length() > 0)
-        {
-            if (firstLine.find("200") != std::string::npos) return true;
-            else std::cerr << "Bad response: " << firstLine << std::endl;
-        }
-        return false;
-#endif
         long responseCode;
         curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &responseCode);
         if (responseCode == 200) return true;
@@ -132,7 +129,7 @@ OauthCurl::OauthCurl(const std::string &pmr2InstanceUrl,
                      const std::string &consumerKey,
                      const std::string &consumerSecret) :
     mInstanceUrl(pmr2InstanceUrl), mConsumerKey(consumerKey),
-    mConsumerSecret(consumerSecret), mAuthenticated(false)
+    mConsumerSecret(consumerSecret), mAuthenticated(false), mAuthenticationUrlSet(false)
 {
     if (mInstanceUrl.back() == '/') mInstanceUrl.pop_back();
     mOauth = new OauthData();
@@ -142,8 +139,6 @@ OauthCurl::OauthCurl(const std::string &pmr2InstanceUrl,
 
 OauthCurl::~OauthCurl()
 {
-    delete mOauth->client;
-    delete mOauth->consumer;
     delete mOauth;
 }
 
@@ -170,7 +165,8 @@ std::string OauthCurl::getAuthenticationUrl()
     std::string base_request_token_url = requestTokenUrl + "?"
             + request_token_query_args;
 
-    mOauth->client->setCallbackUrl("oob");
+    mOauth->client->setCallbackUrl("http://localhost:1234/register");
+    //mOauth->client->setCallbackUrl("oob");
 
     std::string oAuthHeader = mOauth->client->getFormattedHttpHeader(OAuth::Http::Post, base_request_token_url);
     std::cout << "base_request_token_url: " << base_request_token_url << std::endl;
@@ -201,15 +197,21 @@ std::string OauthCurl::getAuthenticationUrl()
     // Step 2: Redirect to the provider.
     std::string authenticationUrl = authoriseUrl + "?oauth_token=" +
             request_token.key();
+    mAuthenticationUrlSet = true;
+
+    // save the request token for use later
+    mOauth->requestToken = new OAuth::Token(request_token.key(), request_token.secret());
+
     return authenticationUrl;
 }
-#if 0
+
+bool OauthCurl::authenticate(const std::string &oauthVerifier)
+{
     // After the user has granted access to you, the consumer, the
     // provider will redirect you to whatever URL you have told them
     // to redirect to. You can usually define this in the
     // oauth_callback argument as well.
-    std::string pin = getUserString("What is the PIN?");
-    request_token.setPin(pin);
+    mOauth->requestToken->setPin(oauthVerifier);
 
     // Step 3: Once the consumer has redirected the user back to the
     // oauth_callback URL you can request the access token the user
@@ -218,21 +220,30 @@ std::string OauthCurl::getAuthenticationUrl()
     // and use the access token returned. You should store the oauth
     // token and token secret somewhere safe, like a database, for
     // future use.
-    oauth = OAuth::Client(&consumer, &request_token);
+    //oauth = OAuth::Client(&consumer, &request_token);
+    delete mOauth->client;
+    mOauth->client = new OAuth::Client(mOauth->consumer, mOauth->requestToken);
     // Note that we explicitly specify an empty body here (it's a GET) so we can
     // also specify to include the oauth_verifier parameter
-    oAuthQueryString = oauth.getURLQueryString( OAuth::Http::Get, access_token_url, std::string( "" ), true );
-    std::cout << "Enter the following in your browser to get the final access token & secret: " << std::endl;
-    std::cout << access_token_url << "?" << oAuthQueryString;
-    std::cout << std::endl;
+    std::string getAccessTokenUrl = mInstanceUrl + "/OAuthGetAccessToken";
+    std::string oAuthHeader = mOauth->client->getFormattedHttpHeader(OAuth::Http::Post, getAccessTokenUrl, "", true);
+    //oAuthQueryString = oauth.getURLQueryString( OAuth::Http::Get, access_token_url, std::string( "" ), true );
+
+    //std::cout << "Enter the following in your browser to get the final access token & secret: " << std::endl;
+    //std::cout << access_token_url << "?" << oAuthQueryString;
+    //std::cout << std::endl;
+
+    std::string accessTokenResponse = mOauth->performPost(getAccessTokenUrl, oAuthHeader);
+
+    std::cout << "Access token returned: " << accessTokenResponse << std::endl;
 
     // Once they've come back from the browser, extract the token and token_secret from the response
-    std::string access_token_resp = getUserString("Enter the response:");
+    //std::string access_token_resp = getUserString("Enter the response:");
     // On this extractToken, we do the parsing ourselves (via the library) so we
     // can extract additional keys that are sent back, in the case of twitter,
     // the screen_name
-    OAuth::KeyValuePairs access_token_resp_data = OAuth::ParseKeyValuePairs(access_token_resp);
-    OAuth::Token access_token = OAuth::Token::extract( access_token_resp_data );
+    OAuth::KeyValuePairs access_token_resp_data = OAuth::ParseKeyValuePairs(accessTokenResponse);
+    OAuth::Token access_token = OAuth::Token::extract(access_token_resp_data);
 
     std::cout << "Access token:" << std::endl;
     std::cout << "    - oauth_token        = " << access_token.key() << std::endl;
@@ -245,8 +256,7 @@ std::string OauthCurl::getAuthenticationUrl()
     for(OAuth::KeyValuePairs::iterator it = screen_name_its.first; it != screen_name_its.second; it++)
         std::cout << "Also extracted screen name from access token response: " << it->second << std::endl;
 
-    return false;
+    return true;
 }
-#endif
 
 } // namespace gms

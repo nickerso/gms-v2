@@ -66,6 +66,10 @@ int main(int argc, char *argv[])
             return -2;
         }
     }
+    /**
+     * @todo Need to make the data per connection/session rather than a single
+     * object for all connections.
+     */
     gms::ServerData* data = new gms::ServerData(repositoryUrl, workingFolder);
     startServer(atoi(argv[1]), data);
     delete data;

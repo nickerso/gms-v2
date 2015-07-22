@@ -45,12 +45,16 @@ public:
      */
     bool isAuthenticated() const;
 
+    bool isAuthenticationUrlSet() const;
+
     /**
      * Request the authentication URL for this server instance.
      * @return The URL to redirect the user to in order to authenticate this instance
      * of the server. An empty string if something goes wrong.
      */
     std::string getAuthenticationUrl();
+
+    bool authenticate(const std::string& oauthVerifier);
 
 private:
     /**
