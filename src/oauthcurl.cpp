@@ -8,7 +8,7 @@
 
 namespace gms {
 
-static int curlCallback(char* data, size_t size, size_t nmemb, OauthData* dataObj);
+static int curlCallback(char* data, size_t size, size_t nmemb, std::string* dataObj);
 
 class OauthData {
 public:
@@ -16,9 +16,7 @@ public:
     {
         std::cout << "Creating a persistent curl handle for an OauthData" << std::endl;
         mCurl = curl_easy_init();
-        /* Set callback function to get response */
-        curl_easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, curlCallback);
-        curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, this);
+        setupCallbacks();
     }
     ~OauthData()
     {
@@ -48,48 +46,78 @@ public:
         {
             curl_easy_setopt(mCurl, CURLOPT_COPYPOSTFIELDS, dataStr.c_str());
         }
+        else
+        {
+            curl_easy_setopt(mCurl, CURLOPT_POSTFIELDSIZE, 0);
+        }
 
         /* Send http request */
-        if (CURLE_OK == curl_easy_perform(mCurl))
+        CURLcode res = curl_easy_perform(mCurl);
+        // tidy up
+        if(headerList) curl_slist_free_all(headerList);
+        // check result
+        if(CURLE_OK != res)
         {
-            if(headerList) curl_slist_free_all(headerList);
-            return mCurlCallbackData;
+            /* we failed */
+            std::cerr << "curl told us " << res << std::endl;
+            return "";
         }
-        if (headerList) curl_slist_free_all(headerList);
-        return "";
-    }
-
-    int saveLastWebResponse(char*& data, size_t size)
-    {
-        if(data && size)
+        // check headers
+        if (!checkOKresponse())
         {
-            /* Append data in our internal buffer */
-            mCurlCallbackData.append(data, size);
-            return (int)size;
+            mCurlCallbackData.clear();
         }
-        return 0;
+        return mCurlCallbackData;
     }
 
 private:
     CURL* mCurl;
     std::string mCurlCallbackData;
+    std::string mResponseHeaders;
+    void setupCallbacks()
+    {
+        /* Set callback function to get response */
+        curl_easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, curlCallback);
+        curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, &mCurlCallbackData);
+        curl_easy_setopt(mCurl, CURLOPT_WRITEHEADER, &mResponseHeaders);
+        curl_easy_setopt(mCurl, CURLOPT_VERBOSE, 1);
+    }
     void resetCurl()
     {
-        /* Restore any custom request we may have */
-        curl_easy_setopt(mCurl, CURLOPT_CUSTOMREQUEST, NULL);
-        /* All supported encodings */
-        curl_easy_setopt(mCurl, CURLOPT_ENCODING, "");
+        curl_easy_reset(mCurl);
         /* Clear callback and error buffers */
         mCurlCallbackData = "";
+        mResponseHeaders = "";
+        setupCallbacks();
     }
+
+    bool checkOKresponse()
+    {
+#if 0
+        std::string firstLine = mResponseHeaders.substr(0, mResponseHeaders.find_first_of('\n'));
+        if (firstLine.length() > 0)
+        {
+            if (firstLine.find("200") != std::string::npos) return true;
+            else std::cerr << "Bad response: " << firstLine << std::endl;
+        }
+        return false;
+#endif
+        long responseCode;
+        curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &responseCode);
+        if (responseCode == 200) return true;
+        std::cerr << "Bad response: " << responseCode << std::endl;
+        return false;
+    }
+
 };
 
-static int curlCallback(char* data, size_t size, size_t nmemb, OauthData* dataObj)
+static int curlCallback(char* data, size_t size, size_t nmemb, std::string* dataObj)
 {
     if(dataObj && data)
     {
-        /* Save http response in our object's buffer */
-        return dataObj->saveLastWebResponse(data, (size*nmemb));
+        size_t bytes = size * nmemb;
+        dataObj->append(data, bytes);
+        return bytes;
     }
     return 0;
 }
@@ -132,21 +160,26 @@ bool OauthCurl::authenticate()
     std::string searchScope =  scopeBaseUrl + "search";
     std::string workspaceTempAuthScope =  scopeBaseUrl + "workspace_tempauth";
     std::string workspaceFullScope = scopeBaseUrl + "workspace_full";
-    std::string request_token_query_args = "oauth_callback=oob";
-    request_token_query_args += "&scope=" + OAuth::PercentEncode(
+    std::string request_token_query_args = "scope=" + OAuth::PercentEncode(
                 collectionScope + "," + searchScope + "," +
                 workspaceTempAuthScope + "," + workspaceFullScope);
 
     std::string requestTokenUrl = mInstanceUrl + "/OAuthRequestToken";
     std::string base_request_token_url = requestTokenUrl + "?"
             + request_token_query_args;
-    std::string oAuthHeader = mOauth->client->getHttpHeader(OAuth::Http::Post, base_request_token_url);
+
+    mOauth->client->setCallbackUrl("oob");
+
+    std::string oAuthHeader = mOauth->client->getFormattedHttpHeader(OAuth::Http::Post, base_request_token_url);
+    std::cout << "base_request_token_url: " << base_request_token_url << std::endl;
+    std::cout << "oAuthHeader: " << oAuthHeader << std::endl;
+
     std::string requestTokenResponse = mOauth->performPost(base_request_token_url, oAuthHeader);
 
     std::cout << "Request token returned: " << requestTokenResponse << std::endl;
 
     // seems liboauth doesn't always check things, so we need to check the result ourselves
-    if (requestTokenResponse.length() == 0)
+    if (requestTokenResponse.find("oauth_token") == std::string::npos)
     {
         std::cerr << "Unable to get get request token, so quitting." << std::endl;
         return false;
