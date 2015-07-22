@@ -4,7 +4,6 @@
 
 #include "serverdata.h"
 #include "api/echo.h"
-#include "api/register.h"
 
 namespace gms{
 
@@ -22,11 +21,6 @@ std::string executeAPI(const std::string& url, const std::map<std::string, std::
     {
         Echo echo;
         response = echo.execute(url, argvals, data);
-    }
-    else if (Register::CompatiblePath(url))
-    {
-        Register service;
-        service.execute(url, argvals, data);
     }
     else
     {

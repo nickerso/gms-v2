@@ -27,27 +27,4 @@ Register::~Register()
     // nothing to do
 }
 
-std::string Register::execute(const std::string& path, const std::map<std::string, std::string>& argvals,
-                              ServerData* data)
-{
-    if (data->isAuthenticated())
-    {
-        /**
-         * @todo we need to decide if we should allow re-registering, but for now
-         * once you are authenticated that is it.
-         */
-        Json::Value root;
-        root["authenticated"] = true;
-        std::string response = Json::FastWriter().write(root);
-        return response;
-    }
-
-    bool resp = data->authenticate();
-    Json::Value root;
-    root["authenticated"] = resp;
-    std::string response = Json::FastWriter().write(root);
-    return response;
-}
-
-
 } // namespace gms

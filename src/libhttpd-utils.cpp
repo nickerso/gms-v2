@@ -9,6 +9,9 @@
 #include "serverdata.h"
 #include "serverapi.h"
 
+// we manage the registration process here.
+#include "api/register.h"
+
 #define PAGE "<html><head><title>libmicrohttpd demo</title>"\
              "</head><body>libmicrohttpd demo</body></html>"
 
@@ -185,6 +188,29 @@ struct connection_info
 #define GET             0
 #define POST            1
 
+static int handleRegistration(struct MHD_Connection *connection, const char *url,
+        std::map<std::string, std::string>& url_args, ServerData* data)
+{
+    int ret;
+    struct MHD_Response *response;
+
+    std::cout << "Handling registration URL: " << url << std::endl;
+
+    response = MHD_create_response_from_buffer(0, NULL, MHD_RESPMEM_PERSISTENT);
+    if (response == 0)
+    {
+        return MHD_NO;
+    }
+
+    // first we need to redirect the user to the PMR authorisation page
+    std::string authorisationUrl = data->getAuthenticationUrl();
+    MHD_add_response_header(response, "Location", authorisationUrl.c_str());
+
+    ret = MHD_queue_response(connection, MHD_HTTP_TEMPORARY_REDIRECT, response);
+    MHD_destroy_response(response);
+    return ret;
+}
+
 static void
 request_completed (void *cls, struct MHD_Connection *connection,
                    void **con_cls, enum MHD_RequestTerminationCode toe)
@@ -276,6 +302,12 @@ static int url_handler(void *cls, struct MHD_Connection *connection,
 
         }
     }
+    // need to handle registration/authorisation separately
+    else if (Register::CompatiblePath(url))
+    {
+        return handleRegistration(connection, url, url_args, data);
+    }
+
     else if (0 == strcmp(method, MHD_HTTP_METHOD_GET))
     {
         if (MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND,
@@ -283,7 +315,6 @@ static int url_handler(void *cls, struct MHD_Connection *connection,
         {
             return MHD_NO;
         }
-
         respdata = executeAPI(url, url_args, data);
     }
 

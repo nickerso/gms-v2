@@ -12,7 +12,7 @@ class OauthCurl;
 /**
  * @brief The GMS Register service handles registering users with a PMR2 instance.
  *
- * This service will manage the OAuth authemtication of users with a given instance of a PMR2 instance.
+ * This simply provides the compatible path convenience method.
  */
 class Register
 {
@@ -34,15 +34,6 @@ public:
      */
     ~Register();
 
-    /**
-     * @brief Execute the register service with the given arguments.
-     * @param path The URL path component.
-     * @param argvals Any arguments specified with the URL triggering this service call.
-     * @param data The GMS server data.
-     * @return Response string in JSON format.
-     */
-    std::string execute(const std::string& path, const std::map<std::string, std::string> &argvals,
-                        ServerData *data);
 };
 
 } // namespace gms

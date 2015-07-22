@@ -39,10 +39,11 @@ public:
     }
 
     /**
-     * Register this instance to our PMR2 instance and request the user to authenticate us.
-     * @return true if we are successful in authenticating, false otherwise.
+     * Request the URL to which the user can be redirected in order to authenticate this instance to
+     * a PMR2 instance.
+     * @return The URL on success; an empty string on failure.
      */
-    bool authenticate();
+    std::string getAuthenticationUrl();
 
 private:
     /**

@@ -46,10 +46,11 @@ public:
     bool isAuthenticated() const;
 
     /**
-     * Authenticate this server instance with a PMR2 instance.
-     * @return true if successfully authenticated, false otherwise.
+     * Request the authentication URL for this server instance.
+     * @return The URL to redirect the user to in order to authenticate this instance
+     * of the server. An empty string if something goes wrong.
      */
-    bool authenticate();
+    std::string getAuthenticationUrl();
 
 private:
     /**

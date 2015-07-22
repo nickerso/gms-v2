@@ -35,12 +35,12 @@ bool ServerData::isAuthenticated() const
     return false;
 }
 
-bool ServerData::authenticate()
+std::string ServerData::getAuthenticationUrl()
 {
     if (mOauthCurl) delete mOauthCurl;
     mOauthCurl = new OauthCurl(mRepositoryUrl, consumer_key, consumer_secret);
-    bool resp = mOauthCurl->authenticate();
-    return resp;
+    std::string url = mOauthCurl->getAuthenticationUrl();
+    return url;
 }
 
 } // namespace gms
