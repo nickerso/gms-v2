@@ -216,6 +216,11 @@ static int handleRegistration(struct MHD_Connection *connection, const char *url
 
     if (data->isAuthenticated())
     {
+        if (url_args.count("test"))
+        {
+            std::string testResponse = data->testGet();
+            std::cout << "Test Get: " << testResponse << std::endl;
+        }
         // already authenticated, so do nothing?
         return send_authenticated_response(connection);
     }
@@ -247,10 +252,6 @@ static int handleRegistration(struct MHD_Connection *connection, const char *url
         {
             std::cerr << "Error authenticating?" << std::endl;
         }
-    }
-    else
-    {
-        std::cerr << "Missing verifier arg?" << std::endl;
     }
     return MHD_NO;
 }

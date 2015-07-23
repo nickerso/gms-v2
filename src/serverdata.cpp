@@ -13,8 +13,6 @@ namespace gms {
 static std::string consumer_key = "iZfWly-W0hgB3IlcG1YEj9vy"; // Key from Tommy
 static std::string consumer_secret = "dtE_ufYhCYD0OUuKy6BGNkQg"; // Secret from Tommy
 
-
-
 ServerData::ServerData(const std::string& repositoryUrl, const std::string& workingFolder) :
     mRepositoryUrl(repositoryUrl), mWorkingFolder(workingFolder), mOauthCurl(NULL)
 {
@@ -59,6 +57,12 @@ bool ServerData::authenticate(const std::string &oauthVerifier)
 {
     if (mOauthCurl) return mOauthCurl->authenticate(oauthVerifier);
     return false;
+}
+
+std::string ServerData::testGet()
+{
+    if (mOauthCurl) return mOauthCurl->testGet();
+    return "";
 }
 
 } // namespace gms

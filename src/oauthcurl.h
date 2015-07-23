@@ -51,6 +51,7 @@ public:
     std::string getAuthenticationUrl();
 
     bool authenticate(const std::string& oauthVerifier);
+    std::string testGet();
 
 private:
     /**

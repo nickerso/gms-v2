@@ -8,6 +8,14 @@
 
 namespace gms {
 
+/**
+ * @brief The mime-type we use for accessing PMR2 web services.
+ *
+ * We could use application/json directly, but using the versioned PMR2 specific
+ * type isolates us from future changes.
+ */
+static std::string pmr2JsonMimeType =  "application/vnd.physiome.pmr2.json.0";
+
 static int curlCallback(char* data, size_t size, size_t nmemb, std::string* dataObj);
 
 class OauthData {
@@ -57,6 +65,44 @@ public:
             curl_easy_setopt(mCurl, CURLOPT_POSTFIELDSIZE, 0);
         }
 
+        /* Send http request */
+        CURLcode res = curl_easy_perform(mCurl);
+        // tidy up
+        if(headerList) curl_slist_free_all(headerList);
+        // check result
+        if(CURLE_OK != res)
+        {
+            /* we failed */
+            std::cerr << "curl told us " << res << std::endl;
+            return "";
+        }
+        // check headers
+        if (!checkOKresponse())
+        {
+            mCurlCallbackData.clear();
+        }
+        return mCurlCallbackData;
+    }
+
+    std::string performGet(const std::string& url, const std::string& authorisationHeader,
+                           const std::string& contentType)
+    {
+        resetCurl();
+        struct curl_slist* headerList = NULL;
+        /* Set authorisation header (expected to have the "Authorization:" prefix */
+        if (authorisationHeader.length())
+            headerList = curl_slist_append(headerList, authorisationHeader.c_str());
+        if (contentType.length())
+        {
+            std::string contentTypeHeader = "Content-Type: " + contentType;
+            headerList = curl_slist_append(headerList, contentTypeHeader.c_str());
+            contentTypeHeader = "Accept: " + contentType;
+            headerList = curl_slist_append(headerList, contentTypeHeader.c_str());
+        }
+        if (headerList) curl_easy_setopt(mCurl, CURLOPT_HTTPHEADER, headerList);
+        /* Set http request, url and data */
+        curl_easy_setopt(mCurl, CURLOPT_HTTPGET, 1);
+        curl_easy_setopt(mCurl, CURLOPT_URL, url.c_str());
         /* Send http request */
         CURLcode res = curl_easy_perform(mCurl);
         // tidy up
@@ -252,11 +298,24 @@ bool OauthCurl::authenticate(const std::string &oauthVerifier)
     std::cout << "You may now access protected resources using the access tokens above." << std::endl;
     std::cout << std::endl;
 
-    std::pair<OAuth::KeyValuePairs::iterator, OAuth::KeyValuePairs::iterator> screen_name_its = access_token_resp_data.equal_range("screen_name");
-    for(OAuth::KeyValuePairs::iterator it = screen_name_its.first; it != screen_name_its.second; it++)
-        std::cout << "Also extracted screen name from access token response: " << it->second << std::endl;
-
+    // now we can save the access token and discard the request token and use the access token for future requests
+    mOauth->accessToken = new OAuth::Token(access_token.key(), access_token.secret());
+    delete mOauth->client;
+    mOauth->client = new OAuth::Client(mOauth->consumer, mOauth->accessToken);
+    mAuthenticated = true;
     return true;
+}
+
+std::string OauthCurl::testGet()
+{
+    std::string testUrl = mInstanceUrl + "/pmr2-dashboard";
+    std::string authHeader = "";
+    if (mAuthenticated)
+    {
+        authHeader = mOauth->client->getFormattedHttpHeader(OAuth::Http::Get, testUrl);
+    }
+    std::string response = mOauth->performGet(testUrl, authHeader, pmr2JsonMimeType);
+    return response;
 }
 
 } // namespace gms
