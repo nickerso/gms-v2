@@ -4,6 +4,7 @@
 
 #include "serverdata.h"
 #include "api/echo.h"
+#include "api/config.h"
 
 namespace gms{
 
@@ -21,6 +22,11 @@ std::string executeAPI(const std::string& url, const std::map<std::string, std::
     {
         Echo echo;
         response = echo.execute(url, argvals, data);
+    }
+    else if (Config::CompatiblePath(url))
+    {
+        Config config;
+        response = config.execute(url, argvals, data);
     }
     else
     {

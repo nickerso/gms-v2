@@ -66,6 +66,7 @@ set(SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/oauthcurl.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/api/echo.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/api/register.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/api/config.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../jsoncpp/jsoncpp.cpp
 )
 
