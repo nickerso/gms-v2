@@ -347,17 +347,6 @@ static int url_handler(void *cls, struct MHD_Connection *connection,
 
         }
     }
-    // need to handle registration/authorisation separately
-    else if (Register::CompatiblePath(url))
-    {
-        if (MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND,
-                get_url_args, &url_args) < 0)
-        {
-            return MHD_NO;
-        }
-        return handleRegistration(connection, url, url_args, data);
-    }
-
     else if (0 == strcmp(method, MHD_HTTP_METHOD_GET))
     {
         if (MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND,
@@ -365,6 +354,12 @@ static int url_handler(void *cls, struct MHD_Connection *connection,
         {
             return MHD_NO;
         }
+        // need to handle registration/authorisation separately
+        if (Register::CompatiblePath(url))
+        {
+            return handleRegistration(connection, url, url_args, data);
+        }
+        // otherwise let our API take care of things.
         respdata = executeAPI(url, url_args, data);
     }
 
