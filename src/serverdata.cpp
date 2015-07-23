@@ -1,7 +1,10 @@
 #include "serverdata.h"
 
+#include <sstream>
 
 #include "oauthcurl.h"
+#include "json/json-forwards.h"
+#include "json/json.h"
 
 namespace gms {
 
@@ -63,6 +66,20 @@ std::string ServerData::testGet()
 {
     if (mOauthCurl) return mOauthCurl->testGet();
     return "";
+}
+
+std::string ServerData::getConfiguration() const
+{
+    Json::Value root;
+    root["repository_url"] = mRepositoryUrl;
+    root["working_folder"] = mWorkingFolder;
+    if (isAuthenticated())
+    {
+        std::istringstream at(mOauthCurl->getAuthenticationSettings());
+        at >> root["access_token"];
+    }
+    std::string response = Json::FastWriter().write(root);
+    return response;
 }
 
 } // namespace gms

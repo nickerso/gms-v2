@@ -10,8 +10,7 @@ class ServerData;
 
 /**
  * @brief The GMS config service.
- * This service interacts with the server configuration information, to either return
- * it as a JSON string, save it to a file in the working folder, or load it from a file in the working folder.
+ * This service displays the server configuration information.
  */
 class Config
 {
@@ -35,10 +34,11 @@ public:
 
     /**
      * @brief Execute the config service with the given arguments.
+     * Currently all arguments are ignored and the configuration is simply returned.
      * @param path
      * @param argvals
      * @param data
-     * @return Response string in JSON format.
+     * @return Response string in JSON format. Will contain a returnCode attribute with a value of 0 on success. The response string will also contain the configuration information.
      */
     std::string execute(const std::string& path, const std::map<std::string, std::string> &argvals,
                         ServerData *data);

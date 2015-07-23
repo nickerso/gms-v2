@@ -6,6 +6,9 @@
 #include <sstream>
 #include <liboauthcpp/liboauthcpp.h>
 
+#include "json/json-forwards.h"
+#include "json/json.h"
+
 namespace gms {
 
 /**
@@ -315,6 +318,18 @@ std::string OauthCurl::testGet()
         authHeader = mOauth->client->getFormattedHttpHeader(OAuth::Http::Get, testUrl);
     }
     std::string response = mOauth->performGet(testUrl, authHeader, pmr2JsonMimeType);
+    return response;
+}
+
+std::string OauthCurl::getAuthenticationSettings() const
+{
+    Json::Value root;
+    if (mAuthenticated)
+    {
+        root["access_token"] = mOauth->accessToken->key();
+        root["access_secret"] = mOauth->accessToken->secret();
+    }
+    std::string response = Json::FastWriter().write(root);
     return response;
 }
 

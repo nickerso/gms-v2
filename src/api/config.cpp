@@ -1,8 +1,12 @@
 #include "config.h"
 
+#include <iostream>
+#include <sstream>
 
 #include <json/json.h>
 #include <json/json-forwards.h>
+
+#include "../serverdata.h"
 
 namespace gms {
 
@@ -28,12 +32,12 @@ std::string Config::execute(const std::string& path, const std::map<std::string,
                           ServerData* data)
 {
     Json::Value root;
-    root["path"] = (path.length() > ConfigRootPath.length()+1) ? path.substr(ConfigRootPath.length()+1) : "";
-    for (const auto& a: argvals)
-    {
-        root["arguments"][a.first] = a.second;
-    }
-    std::string response = Json::FastWriter().write(root);
+    std::string response;
+    std::string serverConfiguration = data->getConfiguration();
+    std::istringstream sc(serverConfiguration);
+    sc >> root["serverConfiguration"];
+    root["returnCode"] = 0;
+    response = Json::FastWriter().write(root);
     return response;
 }
 
