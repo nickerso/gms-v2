@@ -34,6 +34,14 @@ static bool dirExists(const char *path)
     return false;
 }
 
+static bool fileExists(const char *path)
+{
+    struct stat info;
+    if(stat(path, &info) != 0) return false;
+    if(info.st_mode & S_IFDIR) return false;
+    return true;
+}
+
 static void printInformation()
 {
     std::cout << "GET Model Server version: " << gms::versionString() << "\n"
@@ -95,7 +103,12 @@ int main(int argc, char *argv[])
      * object for all connections.
      */
     gms::ServerData* data = new gms::ServerData(repositoryUrl, workingFolder);
+    // see if we have a config file to load (pre-saved authentication)
+    std::string configFile = workingFolder + "/.gms.config";
+    if (fileExists(configFile.c_str())) data->loadConfiguration(configFile);
     startServer(atoi(argv[1]), data);
+    // save the configuration (cache the authentication info)
+    data->saveConfiguration(configFile);
     delete data;
     curl_global_cleanup();
     return 0;

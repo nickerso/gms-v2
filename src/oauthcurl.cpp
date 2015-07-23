@@ -1,6 +1,7 @@
 #include "oauthcurl.h"
 
 #include <iostream>
+#include <sstream>
 #include <curl/curl.h>
 #include <vector>
 #include <sstream>
@@ -331,6 +332,28 @@ std::string OauthCurl::getAuthenticationSettings() const
     }
     std::string response = Json::FastWriter().write(root);
     return response;
+}
+
+int OauthCurl::setAuthenticationSettings(const std::string& settings)
+{
+    std::istringstream is(settings);
+    Json::Value root;
+    is >> root;
+    // load the given access token settings
+    if (mOauth->accessToken) delete mOauth->accessToken;
+    mOauth->accessToken = new OAuth::Token(root["access_token"].asString(), root["access_secret"].asString());
+    delete mOauth->client;
+    mOauth->client = new OAuth::Client(mOauth->consumer, mOauth->accessToken);
+    mAuthenticated = true;
+    // test that we really are authenticated
+    std::string resp = testGet();
+    if (resp == "")
+    {
+        std::cerr << "There seems to be an authentication error with the settings given to me?" << std::endl;
+        mAuthenticated = false;
+        return -1;
+    }
+    return 0;
 }
 
 } // namespace gms
